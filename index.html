@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ログイン付き掲示板</title>
+  <style>
+    body {
+      font-size: 24px;
+      font-family: "Arial", sans-serif;
+      background-color: #F0F0F0;
+      padding: 20px;
+    }
+    input, textarea, button {
+      font-size: 24px;
+      margin-top: 10px;
+    }
+    .hidden { display: none; }
+    .message {
+      background-color: #fff;
+      padding: 15px;
+      margin-top: 20px;
+      border-radius: 10px;
+    }
+    .timestamp {
+      font-size: 18px;
+      color: #666;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <!-- ログイン画面 -->
+  <div id="loginArea">
+    <h1>:上半身シルエット_1: ログイン</h1>
+    <label>名前：</label><br>
+    <input type="text" id="username"><br>
+    <button onclick="login()">ログイン</button>
+  </div>
+  <!-- 掲示板 -->
+  <div id="boardArea" class="hidden">
+    <h1>:メモ: 掲示板（ようこそ <span id="userDisplay"></span> さん）</h1>
+    <textarea id="messageInput" placeholder="メッセージを入力してください"></textarea><br>
+    <button onclick="postMessage()">投稿</button>
+    <div id="messages"></div>
+  </div>
+  <script>
+    const loginArea = document.getElementById("loginArea");
+    const boardArea = document.getElementById("boardArea");
+    const userDisplay = document.getElementById("userDisplay");
+    // 禁止ワードのリスト
+    const bannedWords = ["ばか", "バカ", "baka",
+  "あほ", "アホ", "aho",
+  "くそ", "クソ", "kuso",
+  "しね", "死ね", "シネ", "shine", "shi ne", "sh1ne", "sh!ne",
+  "ころす", "殺す", "コロス", "korosu",
+  "うざい", "ウザい", "うざ", "uzai",
+  "きえろ", "消えろ", "kiero",
+  "ろうがい", "老害",
+  "ぶす", "デブ", "豚", "ぶた",
+  "殴る", "殴り", "なぐる",
+  "けす", "消す", "けされろ",
+  "くたばれ", "くたば", "くびつれ", "くびをつれ",
+  "fuck", "fck", "f*ck", "f**k",
+  "ねた", "妬み", "妬む", "ねたみ",
+  "障害者", "池沼", "ガイジ", "めくら", "つんぼ", "キチガイ", "精神病", "発達障害",
+  , "ころせ", "呪う", "のろい", "怨む", "うらみ",
+  "さっさと", "黙れ", "だまれ", "消滅しろ", "地獄へ", "地獄に落ちろ"];
+    // ログイン情報をチェック（ブラウザに記憶）
+    window.onload = () => {
+      const savedName = localStorage.getItem("username");
+      if (savedName) {
+        showBoard(savedName);
+      }
+    }
+    function login() {
+      const name = document.getElementById("username").value.trim();
+      if (!name) return alert("名前を入力してください");
+      localStorage.setItem("username", name);
+      showBoard(name);
+    }
+    function showBoard(name) {
+      loginArea.classList.add("hidden");
+      boardArea.classList.remove("hidden");
+      userDisplay.textContent = name;
+    }
+    function postMessage() {
+      const input = document.getElementById("messageInput");
+      const text = input.value.trim();
+      const name = localStorage.getItem("username");
+      if (!text || !name) return;
+      // 禁止ワードチェック
+      for (const word of bannedWords) {
+        if (text.includes(word)) {
+          alert(":警告: 投稿に不適切な言葉が含まれています。\nやさしい言葉で伝えてみましょう。");
+          return;
+        }
+      }
+      // 現在時刻を取得して整形
+      const now = new Date();
+      const timestamp = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 ${now.getHours()}時${now.getMinutes()}分`;
+      const messageDiv = document.createElement("div");
+      messageDiv.className = "message";
+      messageDiv.innerHTML = `
+        <strong>${name} さんより：</strong><br>
+        ${text}
+        <div class="timestamp">:3時: ${timestamp}</div>
+      `;
+      // 読み上げボタン
+      const speakBtn = document.createElement("button");
+      speakBtn.textContent = ":拡声器: 読み上げ";
+      speakBtn.onclick = () => {
+        const utterance = new SpeechSynthesisUtterance(`${name}さんのメッセージ。${text}`);
+        utterance.lang = "ja-JP";
+        speechSynthesis.speak(utterance);
+      };
+      messageDiv.appendChild(document.createElement("br"));
+      messageDiv.appendChild(speakBtn);
+      document.getElementById("messages").prepend(messageDiv);
+      input.value = "";
+    }
+  </script>
+</body>
+</html>
